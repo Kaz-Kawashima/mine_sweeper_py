@@ -10,7 +10,8 @@ class Panel(ABC):
         """
         Open panel
         """
-        self.is_open = True
+        if not self.is_flagged:
+            self.is_open = True
 
     def flag(self):
         """

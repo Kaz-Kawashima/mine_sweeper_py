@@ -32,6 +32,14 @@ class GameBoard:
         self.set_bomb_all(all_bomb_num)
         self.calc_bomb_num_all()
 
+    def new_game(self):
+        self.set_bomb_all(self.all_bomb_num)
+        self.calc_bomb_num_all()
+        # close all panel
+        for col in range(1, self.size_y + 1):
+            for row in range(1, self.size_x + 1):
+                self.field[col][row].is_open = False
+
     def set_bomb(self):
         finished = False
         while not finished:
@@ -116,7 +124,7 @@ class GameBoard:
             else:
                 return True
 
-    def flag(self, x, y):
+    def flag(self, y: int, x: int):
         self.field[y][x].flag()
 
     def open_around(self, y: int, x: int) -> int:
