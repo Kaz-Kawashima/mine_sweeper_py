@@ -4,7 +4,7 @@ from panel import BlankPanel, BombPanel, BorderPanel, Panel
 
 
 class GameBoard:
-    def __init__(self, size_x: int, size_y: int, all_bomb_num: int):
+    def __init__(self, size_y: int, size_x: int, all_bomb_num: int):
         self.mined: bool = False
         self.size_x: int = size_x
         self.size_y: int = size_y
@@ -23,53 +23,51 @@ class GameBoard:
         # Fill Boarder
         for y in range(self.field_size_y):
             field[y][0] = BorderPanel()
-            field[y][self.field_size_y - 1] = BorderPanel()
+            field[y][self.field_size_x - 1] = BorderPanel()
         for x in range(self.field_size_x):
             field[0][x] = BorderPanel()
             field[self.field_size_y - 1][x] = BorderPanel()
         self.field = field
         # Set Bomb
-        self.set_bomb_all(all_bomb_num)
-        self.calc_bomb_num_all()
+        self.set_bomb(self.all_bomb_num)
+        self.calc_bomb_num_gb()
 
     def new_game(self):
-        self.set_bomb_all(self.all_bomb_num)
-        self.calc_bomb_num_all()
+        self.set_bomb(self.all_bomb_num)
+        self.calc_bomb_num_gb()
         # close all panel
-        for col in range(1, self.size_y + 1):
-            for row in range(1, self.size_x + 1):
-                self.field[col][row].is_open = False
+        for row in range(1, self.size_y + 1):
+            for col in range(1, self.size_x + 1):
+                self.field[row][col].is_open = False
 
-    def set_bomb(self):
-        finished = False
-        while not finished:
+    def set_bomb(self, all_bomb_num: int):
+        # Check bomb num is valid.
+        if all_bomb_num >= self.size_x * self.size_y:
+            raise ValueError
+        # Set Mines
+        bomb_counter = 0
+        while bomb_counter < all_bomb_num:
             x = random.randint(1, self.size_x)
             y = random.randint(1, self.size_y)
             if not isinstance(self.field[y][x], BombPanel):
                 self.field[y][x] = BombPanel()
-                finished = True
-
-    def set_bomb_all(self, all_bomb_num: int):
-        if all_bomb_num >= self.size_x * self.size_y:
-            raise Exception
-        for _ in range(all_bomb_num):
-            self.set_bomb()
+                bomb_counter += 1
         self.mined = True
 
     def calc_bomb_num(self, y: int, x: int):
         bomb_num = 0
-        for yy in range(y - 1, y + 2):
-            for xx in range(x - 1, x + 2):
-                if isinstance(self.field[yy][xx], BombPanel):
+        for row in range(y - 1, y + 2):
+            for col in range(x - 1, x + 2):
+                if isinstance(self.field[row][col], BombPanel):
                     bomb_num += 1
         self.field[y][x].bomb_num = bomb_num
 
-    def calc_bomb_num_all(self):
-        for y in range(1, self.size_y + 1):
-            for x in range(1, self.size_x + 1):
-                panel = self.field[y][x]
+    def calc_bomb_num_gb(self):
+        for row in range(1, self.size_y + 1):
+            for col in range(1, self.size_x + 1):
+                panel = self.field[row][col]
                 if not isinstance(panel, BombPanel):
-                    self.calc_bomb_num(y, x)
+                    self.calc_bomb_num(row, col)
 
     def __str__(self):
         board_text: str = ""
@@ -104,7 +102,7 @@ class GameBoard:
                 break
         return inputY, inputX
 
-    def open(self, y: int, x: int) -> bool:
+    def open(self, row: int, col: int) -> bool:
         """
         Open panel
 
@@ -114,7 +112,7 @@ class GameBoard:
         return:
             The game is alive or not
         """
-        panel = self.field[y][x]
+        panel = self.field[row][col]
         if panel.is_flagged:
             return True
         else:
@@ -124,8 +122,8 @@ class GameBoard:
             else:
                 return True
 
-    def flag(self, y: int, x: int):
-        self.field[y][x].flag()
+    def flag(self, row: int, col: int):
+        self.field[row][col].flag()
 
     def open_around(self, y: int, x: int) -> int:
         """
@@ -135,9 +133,9 @@ class GameBoard:
             number of newly opened panels
         """
         open_num = 0
-        for yy in range(y - 1, y + 2):
-            for xx in range(x - 1, x + 2):
-                panel = self.field[yy][xx]
+        for row in range(y - 1, y + 2):
+            for col in range(x - 1, x + 2):
+                panel = self.field[row][col]
                 if not panel.is_open:
                     panel.open()
                     open_num += 1
@@ -150,11 +148,11 @@ class GameBoard:
         new_open = 1
         while new_open > 0:
             new_open = 0
-            for y in range(1, self.size_y + 1):
-                for x in range(1, self.size_x + 1):
-                    panel = self.field[y][x]
+            for row in range(1, self.size_y + 1):
+                for col in range(1, self.size_x + 1):
+                    panel = self.field[row][col]
                     if panel.is_open and panel.bomb_num == 0:
-                        new_open += self.open_around(y, x)
+                        new_open += self.open_around(row, col)
 
     def bomb_open(self):
         """
