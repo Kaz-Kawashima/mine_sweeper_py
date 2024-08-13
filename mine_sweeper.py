@@ -49,7 +49,7 @@ class GameBoard:
         while bomb_counter < all_bomb_num:
             x = random.randint(1, self.size_x)
             y = random.randint(1, self.size_y)
-            if not isinstance(self.field[y][x], BombPanel):
+            if not self.field[y][x].is_instance_of(BombPanel):
                 self.field[y][x] = BombPanel()
                 bomb_counter += 1
         self.mined = True
@@ -58,7 +58,7 @@ class GameBoard:
         bomb_num = 0
         for row in range(y - 1, y + 2):
             for col in range(x - 1, x + 2):
-                if isinstance(self.field[row][col], BombPanel):
+                if self.field[row][col].is_instance_of(BombPanel):
                     bomb_num += 1
         self.field[y][x].bomb_num = bomb_num
 
@@ -66,7 +66,7 @@ class GameBoard:
         for row in range(1, self.size_y + 1):
             for col in range(1, self.size_x + 1):
                 panel = self.field[row][col]
-                if not isinstance(panel, BombPanel):
+                if not panel.is_instance_of(BombPanel):
                     self.calc_bomb_num(row, col)
 
     def __str__(self):
@@ -117,7 +117,7 @@ class GameBoard:
             return True
         else:
             panel.is_open = True
-            if isinstance(panel, BombPanel):
+            if panel.is_instance_of(BombPanel):
                 return False
             else:
                 return True
@@ -160,7 +160,7 @@ class GameBoard:
         """
         for panel_row in self.field:
             for panel in panel_row:
-                if not panel.is_open and isinstance(panel, BombPanel):
+                if not panel.is_open and panel.is_instance_of(BombPanel):
                     panel.open()
 
     def is_finished(self) -> bool:
@@ -169,9 +169,20 @@ class GameBoard:
         """
         for panel_row in self.field:
             for panel in panel_row:
-                if not panel.is_open and not isinstance(panel, BombPanel):
+                if not panel.is_open and not panel.is_instance_of(BombPanel):
                     return False
         return True
+
+    def count_flags(self) -> int:
+        """
+        count flagged panels
+        """
+        counter = 0
+        for panel_row in self.field:
+            for panel in panel_row:
+                if panel.is_flagged:
+                    counter += 1
+        return counter
 
     def cli_game(self):
         """

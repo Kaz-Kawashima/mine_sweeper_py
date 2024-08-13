@@ -22,7 +22,7 @@ window_height = tile_size * num_row
 root = tk.Tk()
 frame = tk.Frame(root)
 frame.grid(column=num_col, row=num_row, sticky=tk.NSEW)
-frame.master.title("mine_sweeper--")
+frame.master.title("mine_sweeper-- (F:0)")
 # frame.master.geometry(f"{window_width}x{window_height}")
 
 
@@ -35,7 +35,7 @@ def refresh(button_mat: list[list[tk.Button]]):
                 button["bg"] = "white"
                 button["fg"] = "black"
                 button["text"] = str(panel)
-                if isinstance(panel, BombPanel):
+                if panel.is_instance_of(BombPanel):
                     button["bg"] = "#ff0000"
             elif panel.is_flagged:
                 button["text"] = "F"
@@ -48,9 +48,11 @@ def left_click(self, x, y, button_mat):
     def func(self):
         ret = gb.open(y, x)
         if ret:
-            print("alive")
+            # print("alive")
             gb.cascade_open()
             refresh(button_mat)
+            flag_count = gb.count_flags()
+            frame.master.title(f"mine_sweeper-- (F:{flag_count})")
         else:
             gb.bomb_open()
             refresh(button_mat)
@@ -68,6 +70,8 @@ def right_click(self, x, y, button_mat):
     def func(self):
         gb.flag(y, x)
         refresh(button_mat)
+        flag_count = gb.count_flags()
+        frame.master.title(f"mine_sweeper-- (F:{flag_count})")
 
     return func
 

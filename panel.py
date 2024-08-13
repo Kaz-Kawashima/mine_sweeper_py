@@ -22,6 +22,9 @@ class Panel(ABC):
         else:
             self.is_flagged = True
 
+    def is_instance_of(self, TypeObject) -> bool:
+        return isinstance(self, TypeObject)
+
 
 class BombPanel(Panel):
     def __init__(self):
