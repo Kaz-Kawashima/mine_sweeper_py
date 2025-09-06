@@ -1,15 +1,17 @@
 # mine_sweeper_py
 
 ![GUI image](gui_image.png)
-
+![CUI_image](cui_image.png)
 ## About this code
 
 This code is my Python programming practice.
 
-## CLI game
+## CUI game
 
 ```bash
-python mine_sweeper.py
+# If you are using Windows
+# pip install windows-curses
+python mine_sweeper_cui.py
 ```
 
 ## GUI game
@@ -17,6 +19,10 @@ python mine_sweeper.py
 ```bash
 python mine_sweeper_gui.py
 ```
+
+## Dependency
+
+- [windows-curses](https://github.com/zephyrproject-rtos/windows-curses) (windows only)
 
 ## Impression about Python
 
@@ -26,9 +32,9 @@ python mine_sweeper_gui.py
 
 ブロックに括弧を使わないので、行数が少なく見通しが良い。
 
-デフォルトの組込みの機能が豊富。GUIでさえ組込みで書ける。
+デフォルトの組込みの機能が豊富。TUI/GUI も組込みライブラリで書ける。
 
-実行環境の配布は面倒で、PyInstaller はバッドノウハウの塊になる。
+実行環境の配布は面倒で、PyInstaller はバッドノウハウが多い。
 
 普通のオブジェクト指向言語なので継承とかは普通に書ける。動的型判定ができるのが嬉しい。
 

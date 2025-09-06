@@ -1,6 +1,6 @@
 import sys
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import font, messagebox
 
 from mine_sweeper import GameBoard
 from panel import BombPanel
@@ -36,10 +36,11 @@ def refresh(button_mat: list[list[tk.Button]]):
                 button["fg"] = "black"
                 button["text"] = str(panel)
                 if panel.is_instance_of(BombPanel):
-                    button["bg"] = "#ff0000"
+                    button["bg"] = "#ff8888"
             elif panel.is_flagged:
                 button["text"] = "F"
             else:
+                button["bg"] = "#888888"
                 button["text"] = " "
 
 
@@ -54,7 +55,7 @@ def left_click(self, x, y, button_mat):
             flag_count = gb.count_flags()
             frame.master.title(f"mine_sweeper-- (F:{flag_count})")
         else:
-            gb.bomb_open()
+            # gb.bomb_open()
             refresh(button_mat)
             messagebox.showinfo("", "Game Over!")
             sys.exit()
@@ -82,7 +83,9 @@ for row in range(num_row):
     for col in range(num_col):
         x = col + 1
         y = row + 1
-        button = tk.Button(frame, text=" ", width=5, height=2)
+        button = tk.Button(
+            frame, text=" ", width=5, height=2, font=("Helvetica", 10, "bold")
+        )
         button.bind("<Button-1>", left_click(frame, x, y, button_mat))
         button.bind("<Button-2>", right_click(frame, x, y, button_mat))
         button.bind("<Button-3>", right_click(frame, x, y, button_mat))
@@ -90,4 +93,5 @@ for row in range(num_row):
         button_row.append(button)
     button_mat.append(button_row)
 
+refresh(button_mat)
 root.mainloop()

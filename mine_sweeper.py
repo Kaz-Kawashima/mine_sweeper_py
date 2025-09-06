@@ -1,18 +1,31 @@
 import random
+from enum import Enum
 
 from panel import BlankPanel, BombPanel, BorderPanel, Panel
 
 
+class Status(Enum):
+    UNINITIALIZED = 1
+    PLAYING = 2
+    WIN = 3
+    LOSE = 4
+
+
 class GameBoard:
-    def __init__(self, size_y: int, size_x: int, all_bomb_num: int):
-        self.mined: bool = False
+    def __init__(self, size_y: int, size_x: int, num_bomb: int):
         self.size_x: int = size_x
         self.size_y: int = size_y
         self.field_size_x: int = size_x + 2
         self.field_size_y: int = size_y + 2
         self.field: list[list[Panel]]
-        self.all_bomb_num: int = all_bomb_num
+        self.num_bomb: int = num_bomb
+        self.cursor_row: int = 1
+        self.cursor_col: int = 1
+        self.status: Status = Status.UNINITIALIZED
 
+        self.init_field()
+
+    def init_field(self):
         # Fill Panel
         field = []
         for _ in range(self.field_size_y):
@@ -28,33 +41,50 @@ class GameBoard:
             field[0][x] = BorderPanel()
             field[self.field_size_y - 1][x] = BorderPanel()
         self.field = field
-        # Set Bomb
-        self.set_bomb(self.all_bomb_num)
-        self.calc_bomb_num_gb()
+
+    def get_status(self) -> Status:
+        if self.status == Status.UNINITIALIZED:
+            return self.status
+        self.status = Status.WIN
+        for panel_row in self.field:
+            for p in panel_row:
+                if p.is_open and p.is_instance_of(BombPanel):
+                    self.status = Status.LOSE
+                    return Status.LOSE
+                if not p.is_open and p.is_instance_of(BlankPanel):
+                    self.status = Status.PLAYING
+        return self.status
 
     def new_game(self):
-        self.set_bomb(self.all_bomb_num)
-        self.calc_bomb_num_gb()
-        # close all panel
+        # reset all panel
         for row in range(1, self.size_y + 1):
             for col in range(1, self.size_x + 1):
-                self.field[row][col].is_open = False
+                self.field[row][col] = BlankPanel()
+        self.status = Status.UNINITIALIZED
 
-    def set_bomb(self, all_bomb_num: int):
+    def set_bomb(self, cursor_row: int = None, cursor_col: int = None):
         # Check bomb num is valid.
-        if all_bomb_num >= self.size_x * self.size_y:
+        if self.num_bomb >= self.size_x * self.size_y:
             raise ValueError
+        if cursor_row is None:
+            cursor_row = self.cursor_row
+        if cursor_col is None:
+            cursor_col = self.cursor_col
+
         # Set Mines
         bomb_counter = 0
-        while bomb_counter < all_bomb_num:
+        while bomb_counter < self.num_bomb:
             x = random.randint(1, self.size_x)
             y = random.randint(1, self.size_y)
+            if x == cursor_col and y == cursor_row:
+                continue
             if not self.field[y][x].is_instance_of(BombPanel):
                 self.field[y][x] = BombPanel()
                 bomb_counter += 1
-        self.mined = True
+        self.calc_bomb_values()
+        self.status = Status.PLAYING
 
-    def calc_bomb_num(self, y: int, x: int):
+    def calc_panel_bomb_value(self, y: int, x: int):
         bomb_num = 0
         for row in range(y - 1, y + 2):
             for col in range(x - 1, x + 2):
@@ -62,12 +92,12 @@ class GameBoard:
                     bomb_num += 1
         self.field[y][x].bomb_num = bomb_num
 
-    def calc_bomb_num_gb(self):
+    def calc_bomb_values(self):
         for row in range(1, self.size_y + 1):
             for col in range(1, self.size_x + 1):
                 panel = self.field[row][col]
                 if not panel.is_instance_of(BombPanel):
-                    self.calc_bomb_num(row, col)
+                    self.calc_panel_bomb_value(row, col)
 
     def __str__(self):
         board_text: str = ""
@@ -77,6 +107,26 @@ class GameBoard:
                 board_text += " "
             board_text += "\n"
         return board_text
+
+    def up(self):
+        self.cursor_row -= 1
+        if self.cursor_row < 1:
+            self.cursor_row = 1
+
+    def down(self):
+        self.cursor_row += 1
+        if self.cursor_row > self.size_y:
+            self.cursor_row = self.size_y
+
+    def right(self):
+        self.cursor_col += 1
+        if self.cursor_col > self.size_x:
+            self.cursor_col = self.size_x
+
+    def left(self):
+        self.cursor_col -= 1
+        if self.cursor_col < 1:
+            self.cursor_col = 1
 
     def user_input(self) -> (int, int):
         """
@@ -102,7 +152,7 @@ class GameBoard:
                 break
         return inputY, inputX
 
-    def open(self, row: int, col: int) -> bool:
+    def open(self, row: int = None, col: int = None) -> bool:
         """
         Open panel
 
@@ -112,17 +162,37 @@ class GameBoard:
         return:
             The game is alive or not
         """
+        if row is None:
+            row = self.cursor_row
+        if col is None:
+            col = self.cursor_col
+
+        # Set Bombs if not initialized
+        if self.status == Status.UNINITIALIZED:
+            self.set_bomb(row, col)
+
+        # Open Panel
+        safe_open = False
         panel = self.field[row][col]
         if panel.is_flagged:
-            return True
+            safe_open = True
         else:
             panel.is_open = True
             if panel.is_instance_of(BombPanel):
-                return False
+                safe_open = False
+                self.bomb_open()
             else:
-                return True
+                if panel.bomb_num == 0:
+                    self.cascade_open()
+                safe_open = True
+        self.get_status()
+        return safe_open
 
-    def flag(self, row: int, col: int):
+    def flag(self, row: int = None, col: int = None):
+        if row is None:
+            row = self.cursor_row
+        if col is None:
+            col = self.cursor_col
         self.field[row][col].flag()
 
     def open_around(self, y: int, x: int) -> int:
