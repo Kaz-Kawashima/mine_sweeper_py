@@ -27,9 +27,9 @@ class Panel(ABC):
 
 
 class BombPanel(Panel):
-    def __init__(self):
+    def __init__(self, flag: bool):
         self.is_open: bool = False
-        self.is_flagged = False
+        self.is_flagged = flag
 
     def __str__(self):
         if self.is_open:

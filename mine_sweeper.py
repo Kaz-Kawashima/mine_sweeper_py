@@ -71,7 +71,7 @@ class GameBoard:
         if cursor_col is None:
             cursor_col = self.cursor_col
 
-        # Set Mines
+        # Set Bombs
         bomb_counter = 0
         while bomb_counter < self.num_bomb:
             x = random.randint(1, self.size_x)
@@ -79,7 +79,8 @@ class GameBoard:
             if x == cursor_col and y == cursor_row:
                 continue
             if not self.field[y][x].is_instance_of(BombPanel):
-                self.field[y][x] = BombPanel()
+                flag = self.field[y][x].is_flagged
+                self.field[y][x] = BombPanel(flag)
                 bomb_counter += 1
         self.calc_bomb_values()
         self.status = Status.PLAYING
@@ -206,7 +207,7 @@ class GameBoard:
         for row in range(y - 1, y + 2):
             for col in range(x - 1, x + 2):
                 panel = self.field[row][col]
-                if not panel.is_open:
+                if not panel.is_open and not panel.is_flagged:
                     panel.open()
                     open_num += 1
         return open_num
